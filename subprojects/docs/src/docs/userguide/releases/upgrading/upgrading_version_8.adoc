@@ -47,6 +47,15 @@ The `groovy-base` plugin is now responsible for configuring source and target co
 If you are using this task *without applying `grooy-base`*, you will have to manually set compatibility versions on these tasks.
 In general, the `groovy-base` plugin should be applied whenever working with Groovy language tasks.
 
+=== Deprecations
+
+[[depending_on_root_configuration]]
+==== Deprecated depending on resolved configuration
+
+In some cases, it is possible to construct a dependency graph where the configuration being resolved can also be selected by a dependency in the graph.
+This can only occur when a Configuration is marked as both consumable and resolvable.
+In Gradle 9.0, this will no longer be allowed and will result in an error.
+
 [[changes_8.4]]
 == Upgrading from 8.3 and earlier
 
