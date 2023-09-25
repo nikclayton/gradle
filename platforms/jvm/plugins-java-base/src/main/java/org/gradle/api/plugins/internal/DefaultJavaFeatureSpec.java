@@ -96,11 +96,11 @@ public class DefaultJavaFeatureSpec implements FeatureSpecInternal {
         JvmFeatureInternal feature = new DefaultJvmFeature(name, sourceSet, capabilities, project, true, SourceSet.isMain(sourceSet));
         feature.withApi();
 
-        // TODO: #23495 Investigate the implications of using this class without
-        //       the java plugin applied, and thus no java component present.
-        //       In the long run, all domain objects created by this feature should be
-        //       owned by a component. If we do not add them to the default java component,
-        //       we should be adding them to a user-provided or new component instead.
+    // TODO: #23495 Investigate the implications of using this class without
+    //       the java plugin applied, and thus no java component present.
+    //       In the long run, all domain objects created by this feature should be
+    //       owned by a component. If we do not add them to the default java component,
+    //       we should be adding them to a user-provided or new component instead.
         project.getComponents().withType(JvmSoftwareComponentInternal.class).configureEach(component -> {
             AdhocComponentWithVariants adhocComponent = (AdhocComponentWithVariants) component;
             if (withJavadocJar) {
@@ -115,8 +115,8 @@ public class DefaultJavaFeatureSpec implements FeatureSpecInternal {
             }
 
             if (allowPublication) {
-                adhocComponent.addVariantsFromConfiguration(feature.getApiElementsConfiguration(), new JavaConfigurationVariantMapping("compile", true));
-                adhocComponent.addVariantsFromConfiguration(feature.getRuntimeElementsConfiguration(), new JavaConfigurationVariantMapping("runtime", true));
+                adhocComponent.addVariantsFromConfiguration(feature.getApiElementsConfiguration(), new JavaConfigurationVariantMapping("compile", true, null));
+                adhocComponent.addVariantsFromConfiguration(feature.getRuntimeElementsConfiguration(), new JavaConfigurationVariantMapping("runtime", true, null));
             }
         });
     }

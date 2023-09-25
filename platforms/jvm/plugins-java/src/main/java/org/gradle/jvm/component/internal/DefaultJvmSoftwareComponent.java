@@ -104,8 +104,8 @@ public class DefaultJvmSoftwareComponent extends DefaultAdhocSoftwareComponent i
         configurePublishing(plugins, extensions, sourceSet);
 
         // Register the consumable configurations as providing variants for consumption.
-        addVariantsFromConfiguration(mainFeature.getApiElementsConfiguration(), new JavaConfigurationVariantMapping("compile", false));
-        addVariantsFromConfiguration(mainFeature.getRuntimeElementsConfiguration(), new JavaConfigurationVariantMapping("runtime", false));
+        addVariantsFromConfiguration(mainFeature.getApiElementsConfiguration(), new JavaConfigurationVariantMapping("compile", false, mainFeature.getCompileClasspathConfiguration()));
+        addVariantsFromConfiguration(mainFeature.getRuntimeElementsConfiguration(), new JavaConfigurationVariantMapping("runtime", false, mainFeature.getRuntimeClasspathConfiguration()));
 
         this.testSuite = configureBuiltInTest(project);
     }
@@ -180,7 +180,7 @@ public class DefaultJvmSoftwareComponent extends DefaultAdhocSoftwareComponent i
 
         Configuration javadocElements = mainFeature.getJavadocElementsConfiguration();
         if (!isRegisteredAsLegacyVariant(javadocElements)) {
-            addVariantsFromConfiguration(javadocElements, new JavaConfigurationVariantMapping("runtime", true));
+            addVariantsFromConfiguration(javadocElements, new JavaConfigurationVariantMapping("runtime", true, null));
         }
     }
 
@@ -190,7 +190,7 @@ public class DefaultJvmSoftwareComponent extends DefaultAdhocSoftwareComponent i
 
         Configuration sourcesElements = mainFeature.getSourcesElementsConfiguration();
         if (!isRegisteredAsLegacyVariant(sourcesElements)) {
-            addVariantsFromConfiguration(sourcesElements, new JavaConfigurationVariantMapping("runtime", true));
+            addVariantsFromConfiguration(sourcesElements, new JavaConfigurationVariantMapping("runtime", true, null));
         }
     }
 
