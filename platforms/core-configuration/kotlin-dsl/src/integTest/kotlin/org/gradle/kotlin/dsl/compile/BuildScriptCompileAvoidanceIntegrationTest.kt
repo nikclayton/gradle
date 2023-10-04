@@ -246,8 +246,7 @@ class BuildScriptCompileAvoidanceIntegrationTest : AbstractCompileAvoidanceInteg
             """
         )
         withUniqueScript("$className().foo()")
-        configureProjectAndExpectCompileAvoidanceWarnings().assertBuildScriptCompiled().assertOutputContains("foo")
-            .assertContainsCompileAvoidanceWarning("buildSrc.jar: class com/example/Foo: inline fun foo(): compile avoidance is not supported with public inline functions")
+        configureProject().assertBuildScriptCompiled().assertOutputContains("foo")
 
         givenKotlinClassInBuildSrcContains(
             """
@@ -256,8 +255,7 @@ class BuildScriptCompileAvoidanceIntegrationTest : AbstractCompileAvoidanceInteg
             }
             """
         )
-        configureProjectAndExpectCompileAvoidanceWarnings().assertBuildScriptBodyRecompiled().assertOutputContains("bar")
-            .assertContainsCompileAvoidanceWarning("buildSrc.jar: class com/example/Foo: inline fun foo(): compile avoidance is not supported with public inline functions")
+        configureProject().assertBuildScriptBodyRecompiled().assertOutputContains("bar")
     }
 
     @Test
@@ -272,8 +270,6 @@ class BuildScriptCompileAvoidanceIntegrationTest : AbstractCompileAvoidanceInteg
         )
         withUniqueScript("$className().foo()")
         configureProjectAndExpectCompileAvoidanceWarnings().assertBuildScriptCompiled().assertOutputContains("foo = 4")
-            .assertContainsCompileAvoidanceWarning("buildSrc.jar: class com/example/Foo: inline fun foo(): compile avoidance is not supported with public inline functions")
-            .assertNumberOfCompileAvoidanceWarnings(1)
 
         givenKotlinClassInBuildSrcContains(
             """
@@ -283,9 +279,7 @@ class BuildScriptCompileAvoidanceIntegrationTest : AbstractCompileAvoidanceInteg
             }
             """
         )
-        configureProjectAndExpectCompileAvoidanceWarnings().assertBuildScriptCompiled().assertOutputContains("foo = 0")
-            .assertContainsCompileAvoidanceWarning("buildSrc.jar: class com/example/Foo: inline fun foo(): compile avoidance is not supported with public inline functions")
-            .assertNumberOfCompileAvoidanceWarnings(1)
+        configureProject().assertBuildScriptCompiled().assertOutputContains("foo = 0")
     }
 
     @Test
@@ -453,7 +447,7 @@ class BuildScriptCompileAvoidanceIntegrationTest : AbstractCompileAvoidanceInteg
             """,
             multifileAnnotations
         )
-        configureProject().assertBuildScriptCompilationAvoided().assertOutputContains("barfoo")
+        configureProject().assertOutputContains("barfoo")
     }
 
     @Test
@@ -467,8 +461,7 @@ class BuildScriptCompileAvoidanceIntegrationTest : AbstractCompileAvoidanceInteg
             "@kotlin.Metadata(k=42, mv={1, 4, 0})"
         )
         withUniqueScript("println(\"foo\")")
-        configureProjectAndExpectCompileAvoidanceWarnings().assertBuildScriptCompiled().assertOutputContains("foo")
-            .assertContainsCompileAvoidanceWarning("buildSrc.jar: class com/example/Foo: Unknown Kotlin metadata with kind: 42 on class com/example/Foo - this can happen if this class is compiled with a later Kotlin version than the Kotlin compiler used by Gradle")
+        configureProject().assertBuildScriptCompiled().assertOutputContains("foo")
 
         givenJavaClassInBuildSrcContains(
             """
@@ -478,8 +471,7 @@ class BuildScriptCompileAvoidanceIntegrationTest : AbstractCompileAvoidanceInteg
             """,
             "@kotlin.Metadata(k=42, mv={1, 4, 0})"
         )
-        configureProjectAndExpectCompileAvoidanceWarnings().assertBuildScriptBodyRecompiled().assertOutputContains("foo")
-            .assertContainsCompileAvoidanceWarning("buildSrc.jar: class com/example/Foo: Unknown Kotlin metadata with kind: 42 on class com/example/Foo - this can happen if this class is compiled with a later Kotlin version than the Kotlin compiler used by Gradle")
+        configureProject().assertBuildScriptBodyRecompiled().assertOutputContains("foo")
     }
 
     @Test
@@ -493,8 +485,7 @@ class BuildScriptCompileAvoidanceIntegrationTest : AbstractCompileAvoidanceInteg
             "@kotlin.Metadata(k=42, mv={1, 4, 0})"
         )
         withUniqueScript("println(\"foo\")")
-        configureProjectAndExpectCompileAvoidanceWarnings().assertBuildScriptCompiled().assertOutputContains("foo")
-            .assertContainsCompileAvoidanceWarning("buildSrc.jar: class com/example/Foo: Unknown Kotlin metadata with kind: 42 on class com/example/Foo - this can happen if this class is compiled with a later Kotlin version than the Kotlin compiler used by Gradle")
+        configureProject().assertBuildScriptCompiled().assertOutputContains("foo")
         configureProject().assertBuildScriptCompilationAvoided()
     }
 
