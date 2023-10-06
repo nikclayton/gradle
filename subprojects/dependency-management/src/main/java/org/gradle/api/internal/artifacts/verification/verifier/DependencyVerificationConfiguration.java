@@ -233,7 +233,7 @@ public class DependencyVerificationConfiguration {
             if (keyId.getBytes(StandardCharsets.US_ASCII).length < 40) {
                 throw new InvalidGpgKeyIdsException(Collections.singletonList(keyId));
             } else {
-                this.keyId = keyId;
+                this.keyId = keyId.toUpperCase();
             }
         }
 

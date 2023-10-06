@@ -22,7 +22,7 @@ public class IgnoredKey {
     private final String reason;
 
     public IgnoredKey(String keyId, @Nullable String reason) {
-        this.keyId = keyId;
+        this.keyId = keyId.toUpperCase();
         this.reason = reason;
     }
 

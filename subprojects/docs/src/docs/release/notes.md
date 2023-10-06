@@ -120,6 +120,12 @@ versionCatalogs.named("libs").findLibrary("assertj-core").ifPresent { assertjCor
 
 Check the [version catalog API](javadoc/org/gradle/api/artifacts/VersionCatalog.html) for all supported methods.
 
+### Dependency verification improvements
+
+<!-- to be merged with similar seciton from PR #26268 -->
+
+Trusted and ignored keys in `verification-metadata.xml` are case-insensitive now.
+By default, they are written in upper-case to match the ASCII-armored format of `verification-keyring.keys`.
 
 <!-- ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 ADD RELEASE FEATURES ABOVE
@@ -128,6 +134,7 @@ ADD RELEASE FEATURES ABOVE
 -->
 
 ## Promoted features
+
 Promoted features are features that were incubating in previous versions of Gradle but are now supported and subject to backwards compatibility.
 See the User Manual section on the “[Feature Lifecycle](userguide/feature_lifecycle.html)” for more information.
 

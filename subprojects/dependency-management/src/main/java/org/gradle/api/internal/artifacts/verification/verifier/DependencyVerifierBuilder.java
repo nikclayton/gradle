@@ -222,7 +222,7 @@ public class DependencyVerifierBuilder {
         }
 
         public void addTrustedKey(String key) {
-            pgpKeys.add(key);
+            pgpKeys.add(key.toUpperCase());
         }
 
         public void addIgnoredKey(IgnoredKey key) {
