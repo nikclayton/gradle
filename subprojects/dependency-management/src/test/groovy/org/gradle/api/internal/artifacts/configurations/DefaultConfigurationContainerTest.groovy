@@ -36,7 +36,7 @@ import org.gradle.api.internal.attributes.ImmutableAttributesFactory
 import org.gradle.api.internal.file.TestFiles
 import org.gradle.api.internal.initialization.RootScriptDomainObjectContext
 import org.gradle.api.internal.project.ProjectStateRegistry
-import org.gradle.configuration.internal.UserCodeApplicationContext
+import org.gradle.internal.code.UserCodeApplicationContext
 import org.gradle.internal.event.ListenerManager
 import org.gradle.internal.model.CalculatedValueContainerFactory
 import org.gradle.internal.operations.BuildOperationExecutor
@@ -366,6 +366,16 @@ class DefaultConfigurationContainerTest extends Specification {
         "resolvableUnlocked(String, Action)"                | { resolvableUnlocked("foo", it) }
         "dependencyScopeUnlocked(String, Action)"           | { dependencyScopeUnlocked("foo", it) }
         "resolvableDependencyScopeUnlocked(String, Action)" | { resolvableDependencyScopeUnlocked("foo", it) }
+    }
+
+    def "role locked configurations default to non-visible"() {
+        expect:
+        !configurationContainer.consumable("a").get().visible
+        !configurationContainer.consumable("b", {}).get().visible
+        !configurationContainer.resolvable("c").get().visible
+        !configurationContainer.resolvable("d", {}).get().visible
+        !configurationContainer.dependencyScope("e").get().visible
+        !configurationContainer.dependencyScope("f", {}).get().visible
     }
 
     // withType when used with a class that is not a super-class of the container does not work with registered elements

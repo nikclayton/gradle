@@ -18,7 +18,7 @@ package org.gradle.api.internal.artifacts.ivyservice.resolveengine.artifact
 
 import org.gradle.api.internal.artifacts.ivyservice.resolveengine.excludes.specs.ExcludeSpec
 import org.gradle.api.internal.artifacts.ivyservice.resolveengine.graph.DependencyGraphEdge
-import org.gradle.api.internal.artifacts.transform.VariantSelector
+import org.gradle.api.internal.artifacts.transform.ArtifactVariantSelector
 import org.gradle.api.internal.attributes.ImmutableAttributes
 import org.gradle.internal.component.model.ComponentArtifactResolveState
 import org.gradle.internal.component.model.ComponentGraphResolveMetadata
@@ -37,7 +37,7 @@ class VariantResolvingArtifactSetTest extends Specification {
     VariantGraphResolveState variant
     DependencyGraphEdge dependency
 
-    def selector = Mock(VariantSelector)
+    def selector = Mock(ArtifactVariantSelector)
 
     def setup() {
         variantResolver = Mock(VariantArtifactResolver)
@@ -57,10 +57,11 @@ class VariantResolvingArtifactSetTest extends Specification {
     def "returns empty set when component id does not match spec"() {
         when:
         def artifactSet = new VariantResolvingArtifactSet(variantResolver, component, variant, dependency)
-        def selected = artifactSet.select({ false }, selector, selectFromAll)
+        def spec = new ArtifactSelectionSpec(ImmutableAttributes.EMPTY, { false }, selectFromAll, false)
+        def selected = artifactSet.select(selector, spec)
 
         then:
-        0 * selector.select(_, _)
+        0 * selector.select(_, _, _, _)
         selected == ResolvedArtifactSet.EMPTY
 
         where:
@@ -87,20 +88,16 @@ class VariantResolvingArtifactSetTest extends Specification {
         }
 
         when:
+        def spec = new ArtifactSelectionSpec(ImmutableAttributes.EMPTY, { true }, false, false)
         def artifactSet = new VariantResolvingArtifactSet(variantResolver, component, variant, dependency)
-        artifactSet.select({ true }, new VariantSelector() {
+        artifactSet.select(new ArtifactVariantSelector() {
             @Override
-            ResolvedArtifactSet select(ResolvedVariantSet candidates, VariantSelector.Factory factory) {
+            ResolvedArtifactSet select(ResolvedVariantSet candidates, ImmutableAttributes requestAttributes, boolean allowNoMatchingVariants, ArtifactVariantSelector.ResolvedArtifactTransformer factory) {
                 assert candidates.variants.size() == 2
                 // select the first variant
                 return candidates.variants[0].artifacts
             }
-
-            @Override
-            ImmutableAttributes getRequestedAttributes() {
-                return ImmutableAttributes.EMPTY
-            }
-        }, false)
+        }, spec)
 
         then:
         1 * variantResolver.resolveVariant(_, subvariant1) >> Mock(ResolvedVariant)
@@ -125,10 +122,11 @@ class VariantResolvingArtifactSetTest extends Specification {
         def artifactSet = new VariantResolvingArtifactSet(variantResolver, component, variant, dependency)
 
         when:
-        def selected = artifactSet.select({ true }, selector, selectFromAll)
+        def spec = new ArtifactSelectionSpec(ImmutableAttributes.EMPTY, { true }, false, false)
+        def selected = artifactSet.select(selector, spec)
 
         then:
-        1 * selector.select(_, _) >> artifacts
+        1 * selector.select(_, _, _, _) >> artifacts
         _ * variantResolver.resolveVariant(_, _) >> Mock(ResolvedVariant)
         selected == artifacts
 

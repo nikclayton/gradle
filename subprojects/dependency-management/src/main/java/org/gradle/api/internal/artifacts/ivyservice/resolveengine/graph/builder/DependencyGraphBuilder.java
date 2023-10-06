@@ -26,7 +26,6 @@ import org.gradle.api.artifacts.component.ModuleComponentSelector;
 import org.gradle.api.attributes.Attribute;
 import org.gradle.api.capabilities.Capability;
 import org.gradle.api.internal.artifacts.ComponentSelectorConverter;
-import org.gradle.api.internal.artifacts.ResolveContext;
 import org.gradle.api.internal.artifacts.ResolvedVersionConstraint;
 import org.gradle.api.internal.artifacts.configurations.ResolutionStrategyInternal;
 import org.gradle.api.internal.artifacts.ivyservice.dependencysubstitution.DependencySubstitutionApplicator;
@@ -47,12 +46,12 @@ import org.gradle.api.internal.attributes.CompatibilityRule;
 import org.gradle.api.internal.attributes.ImmutableAttributes;
 import org.gradle.api.internal.attributes.ImmutableAttributesFactory;
 import org.gradle.api.specs.Spec;
-import org.gradle.internal.component.IncompatibleVariantsSelectionException;
-import org.gradle.internal.component.model.AttributeMatchingConfigurationSelector;
+import org.gradle.internal.component.IncompatibleArtifactVariantsException;
 import org.gradle.internal.component.model.ComponentGraphResolveMetadata;
 import org.gradle.internal.component.model.ComponentIdGenerator;
 import org.gradle.internal.component.model.DefaultCompatibilityCheckResult;
 import org.gradle.internal.component.model.DependencyMetadata;
+import org.gradle.internal.component.model.GraphVariantSelector;
 import org.gradle.internal.operations.BuildOperationConstraint;
 import org.gradle.internal.operations.BuildOperationExecutor;
 import org.gradle.internal.resolve.ModuleVersionResolveException;
@@ -91,7 +90,7 @@ public class DependencyGraphBuilder {
     private final ComponentIdGenerator idGenerator;
     private final VersionParser versionParser;
     private final ResolutionConflictTracker conflictTracker;
-    private final AttributeMatchingConfigurationSelector configurationSelector;
+    private final GraphVariantSelector variantSelector;
 
     final static Spec<EdgeState> ENDORSE_STRICT_VERSIONS_DEPENDENCY_SPEC = dependencyState -> dependencyState.getDependencyState().getDependency().isEndorsingStrictVersions();
     final static Spec<EdgeState> NOT_ENDORSE_STRICT_VERSIONS_DEPENDENCY_SPEC = dependencyState -> !dependencyState.getDependencyState().getDependency().isEndorsingStrictVersions();
@@ -112,7 +111,7 @@ public class DependencyGraphBuilder {
                                   Comparator<Version> versionComparator,
                                   ComponentIdGenerator idGenerator,
                                   VersionParser versionParser,
-                                  AttributeMatchingConfigurationSelector configurationSelector
+                                  GraphVariantSelector variantSelector
     ) {
         this.idResolver = componentIdResolver;
         this.metaDataResolver = componentMetaDataResolver;
@@ -131,18 +130,36 @@ public class DependencyGraphBuilder {
         this.idGenerator = idGenerator;
         this.versionParser = versionParser;
         this.conflictTracker = new ResolutionConflictTracker(moduleConflictHandler, capabilitiesConflictHandler);
-        this.configurationSelector = configurationSelector;
+        this.variantSelector = variantSelector;
     }
 
-    public void resolve(final ResolveContext resolveContext, final DependencyGraphVisitor modelVisitor, boolean includeSyntheticDependencies) {
-        RootComponentMetadataBuilder.RootComponentState rootComponent = resolveContext.toRootComponent();
-
-        int graphSize = resolveContext.getEstimatedGraphSize();
-        ResolutionStrategyInternal resolutionStrategy = resolveContext.getResolutionStrategy();
-
-        List<? extends DependencyMetadata> syntheticDependencies = includeSyntheticDependencies ? resolveContext.getSyntheticDependencies() : Collections.emptyList();
-
-        ResolveState resolveState = new ResolveState(idGenerator, rootComponent, idResolver, metaDataResolver, edgeFilter, attributesSchema, moduleExclusions, componentSelectorConverter, attributesFactory, attributeDesugaring, dependencySubstitutionApplicator, versionSelectorScheme, versionComparator, versionParser, moduleConflictHandler.getResolver(), graphSize, resolveContext.getResolutionStrategy().getConflictResolution(), syntheticDependencies, conflictTracker, configurationSelector);
+    public void resolve(
+        RootComponentMetadataBuilder.RootComponentState rootComponent,
+        ResolutionStrategyInternal resolutionStrategy,
+        List<? extends DependencyMetadata> syntheticDependencies,
+        final DependencyGraphVisitor modelVisitor
+    ) {
+        ResolveState resolveState = new ResolveState(
+            idGenerator,
+            rootComponent,
+            idResolver,
+            metaDataResolver,
+            edgeFilter,
+            attributesSchema,
+            moduleExclusions,
+            componentSelectorConverter,
+            attributesFactory,
+            attributeDesugaring,
+            dependencySubstitutionApplicator,
+            versionSelectorScheme,
+            versionComparator,
+            versionParser,
+            moduleConflictHandler.getResolver(),
+            resolutionStrategy.getConflictResolution(),
+            syntheticDependencies,
+            conflictTracker,
+            variantSelector
+        );
 
         traverseGraph(resolveState);
 
@@ -467,7 +484,7 @@ public class DependencyGraphBuilder {
             assertCompatibleAttributes(first, second, incompatibleNodes);
         }
         if (!incompatibleNodes.isEmpty()) {
-            IncompatibleVariantsSelectionException variantsSelectionException = new IncompatibleVariantsSelectionException(
+            IncompatibleArtifactVariantsException variantsSelectionException = new IncompatibleArtifactVariantsException(
                 IncompatibleVariantsSelectionMessageBuilder.buildMessage(selected, incompatibleNodes)
             );
             for (EdgeState edge : module.getIncomingEdges()) {

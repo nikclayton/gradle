@@ -46,10 +46,9 @@ import org.gradle.api.internal.artifacts.ivyservice.modulecache.ModuleMetadataSe
 import org.gradle.api.internal.artifacts.ivyservice.modulecache.ModuleRepositoryCacheProvider;
 import org.gradle.api.internal.artifacts.ivyservice.modulecache.ModuleSourcesSerializer;
 import org.gradle.api.internal.artifacts.ivyservice.modulecache.SuppliedComponentMetadataSerializer;
-import org.gradle.api.internal.artifacts.ivyservice.projectmodule.DefaultProjectLocalComponentProvider;
 import org.gradle.api.internal.artifacts.ivyservice.projectmodule.DefaultProjectPublicationRegistry;
 import org.gradle.api.internal.artifacts.ivyservice.projectmodule.ProjectDependencyResolver;
-import org.gradle.api.internal.artifacts.ivyservice.resolveengine.DefaultArtifactDependencyResolver;
+import org.gradle.api.internal.artifacts.ivyservice.resolveengine.DependencyGraphResolver;
 import org.gradle.api.internal.artifacts.ivyservice.resolveengine.artifact.ResolvedVariant;
 import org.gradle.api.internal.artifacts.ivyservice.resolveengine.artifact.ResolvedVariantCache;
 import org.gradle.api.internal.artifacts.ivyservice.resolveengine.excludes.ModuleExclusions;
@@ -92,7 +91,6 @@ import org.gradle.cache.internal.InMemoryCacheDecoratorFactory;
 import org.gradle.cache.internal.ProducerGuard;
 import org.gradle.cache.scopes.BuildScopedCacheBuilderFactory;
 import org.gradle.cache.scopes.GlobalScopedCacheBuilderFactory;
-import org.gradle.configuration.internal.UserCodeApplicationContext;
 import org.gradle.initialization.DependenciesAccessors;
 import org.gradle.internal.build.BuildModelLifecycleListener;
 import org.gradle.internal.build.BuildState;
@@ -100,10 +98,11 @@ import org.gradle.internal.build.BuildStateRegistry;
 import org.gradle.internal.buildoption.FeatureFlags;
 import org.gradle.internal.classpath.ClasspathBuilder;
 import org.gradle.internal.classpath.ClasspathWalker;
+import org.gradle.internal.code.UserCodeApplicationContext;
 import org.gradle.internal.component.SelectionFailureHandler;
 import org.gradle.internal.component.external.model.ModuleComponentArtifactMetadata;
 import org.gradle.internal.component.external.model.ModuleComponentGraphResolveStateFactory;
-import org.gradle.internal.component.model.AttributeMatchingConfigurationSelector;
+import org.gradle.internal.component.model.GraphVariantSelector;
 import org.gradle.internal.component.model.VariantResolveMetadata;
 import org.gradle.internal.event.ListenerManager;
 import org.gradle.internal.execution.ExecutionEngine;
@@ -182,12 +181,11 @@ import java.util.function.Function;
 class DependencyManagementBuildScopeServices {
     void configure(ServiceRegistration registration) {
         registration.add(TransformStepNodeDependencyResolver.class);
-        registration.add(DefaultProjectLocalComponentProvider.class);
         registration.add(DefaultProjectPublicationRegistry.class);
         registration.add(FileResourceConnector.class);
         registration.add(DefaultComponentSelectorConverter.class);
         registration.add(ProjectDependencyResolver.class);
-        registration.add(DefaultArtifactDependencyResolver.class);
+        registration.add(DependencyGraphResolver.class);
     }
 
     DependencyResolutionManagementInternal createSharedDependencyResolutionServices(
@@ -387,8 +385,8 @@ class DependencyManagementBuildScopeServices {
         return new SelectionFailureHandler(problems);
     }
 
-    AttributeMatchingConfigurationSelector createAttributeConfigurationSelector(SelectionFailureHandler selectionFailureHandler) {
-        return new AttributeMatchingConfigurationSelector(selectionFailureHandler);
+    GraphVariantSelector createGraphVariantSelector(SelectionFailureHandler selectionFailureHandler) {
+        return new GraphVariantSelector(selectionFailureHandler);
     }
 
     VersionSelectorScheme createVersionSelectorScheme(VersionComparator versionComparator, VersionParser versionParser) {

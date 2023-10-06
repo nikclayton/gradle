@@ -21,13 +21,12 @@ import org.gradle.api.artifacts.component.ComponentIdentifier;
 import org.gradle.api.artifacts.component.ProjectComponentIdentifier;
 import org.gradle.api.internal.artifacts.ivyservice.resolveengine.excludes.specs.ExcludeSpec;
 import org.gradle.api.internal.artifacts.ivyservice.resolveengine.graph.DependencyGraphEdge;
+import org.gradle.api.internal.artifacts.transform.ArtifactVariantSelector;
 import org.gradle.api.internal.artifacts.transform.TransformUpstreamDependenciesResolverFactory;
 import org.gradle.api.internal.artifacts.transform.TransformedVariantFactory;
 import org.gradle.api.internal.artifacts.transform.VariantDefinition;
-import org.gradle.api.internal.artifacts.transform.VariantSelector;
 import org.gradle.api.internal.attributes.AttributesSchemaInternal;
 import org.gradle.api.internal.attributes.ImmutableAttributes;
-import org.gradle.api.specs.Spec;
 import org.gradle.internal.component.model.ComponentArtifactResolveMetadata;
 import org.gradle.internal.component.model.ComponentArtifactResolveState;
 import org.gradle.internal.component.model.ComponentGraphResolveState;
@@ -45,7 +44,7 @@ import java.util.function.Consumer;
  * An {@link ArtifactSet} representing the artifacts contributed by a single variant in a dependency
  * graph, in the context of the dependency referencing it.
  */
-public class VariantResolvingArtifactSet implements ArtifactSet, VariantSelector.Factory {
+public class VariantResolvingArtifactSet implements ArtifactSet, ArtifactVariantSelector.ResolvedArtifactTransformer {
 
     private final VariantArtifactResolver variantResolver;
     private final ComponentGraphResolveState component;
@@ -75,12 +74,15 @@ public class VariantResolvingArtifactSet implements ArtifactSet, VariantSelector
     }
 
     @Override
-    public ResolvedArtifactSet select(Spec<? super ComponentIdentifier> componentFilter, VariantSelector selector, boolean selectFromAllVariants) {
-        if (!componentFilter.isSatisfiedBy(componentId)) {
+    public ResolvedArtifactSet select(
+        ArtifactVariantSelector variantSelector,
+        ArtifactSelectionSpec spec
+    ) {
+        if (!spec.getComponentFilter().isSatisfiedBy(componentId)) {
             return ResolvedArtifactSet.EMPTY;
         } else {
 
-            if (selectFromAllVariants && !artifacts.isEmpty()) {
+            if (spec.getSelectFromAllVariants() && !artifacts.isEmpty()) {
                 // Variants with overridden artifacts cannot be reselected since
                 // we do not know the "true" attributes of the requested artifact.
                 return ResolvedArtifactSet.EMPTY;
@@ -88,11 +90,12 @@ public class VariantResolvingArtifactSet implements ArtifactSet, VariantSelector
 
             ResolvedVariantSet variants;
             try {
-                variants = getVariants(selectFromAllVariants);
+                variants = getVariants(spec.getSelectFromAllVariants());
             } catch (Exception e) {
                 return new BrokenResolvedArtifactSet(e);
             }
-            return selector.select(variants, this);
+
+            return variantSelector.select(variants, spec.getRequestAttributes(), spec.getAllowNoMatchingVariants(), this);
         }
     }
 
